@@ -6,6 +6,8 @@
 #
 #    http://shiny.rstudio.com/
 #
+# Password Robbin: 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
+# Password Johannes: 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
 
 library(shiny)
 
@@ -13,7 +15,7 @@ library(shiny)
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Old Faithful Vulcano Data"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
