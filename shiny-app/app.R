@@ -7,6 +7,8 @@
 #    http://shiny.rstudio.com/
 #
 # Password Robbin: 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
+# Password Johannes: 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
+
 library(shiny)
 
 # Define UI for application that draws a histogram
