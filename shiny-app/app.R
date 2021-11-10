@@ -3,11 +3,18 @@ library(tidyverse)
 library(ggplot2)
 library(nycflights13)
 
-# Define UI for application that draws a histogram
+# loading all data
+airlines <- nycflights13::airlines
+airports <- nycflights13::airports
+flights <- nycflights13::flights
+planes <- nycflights13::planes
+weather <- nycflights13::weather
+
+
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Visualizing Flights Data: package nycflights13"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
