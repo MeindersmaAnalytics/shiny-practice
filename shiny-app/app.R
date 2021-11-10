@@ -3,7 +3,7 @@ library(tidyverse)
 library(ggplot2)
 library(nycflights13)
 
-# loading all data
+# Loading all data
 airlines <- nycflights13::airlines
 airports <- nycflights13::airports
 flights <- nycflights13::flights
@@ -16,34 +16,14 @@ ui <- fluidPage(
     # Application title
     titlePanel("Visualizing Flights Data: package nycflights13"),
 
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
+    ### UI LOGIC
 )
 
-# Define server logic required to draw a histogram
+
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
-    })
+    
+    ### SERVER LOGIC
+    
 }
 
 # Run the application 
