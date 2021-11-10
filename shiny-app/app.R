@@ -1,21 +1,13 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-# Password Robbin: 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
-# Password Johannes: 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
-
 library(shiny)
+library(tidyverse)
+library(ggplot2)
+library(nycflights13)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Vulcano Data"),
+    titlePanel("Old Faithful Geyser Data"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
