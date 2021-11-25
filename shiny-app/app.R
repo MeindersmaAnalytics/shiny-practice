@@ -19,7 +19,7 @@ ui <- fluidPage(
          sidebarPanel(
             selectInput("selectedVariable", "For which variable would you like to display summary statistics?" , choices = variables),
             selectInput("Filter1", "Filtered on?" , choices = variables),
-            sliderInput("Slider1", "Which values" , min = as.integer(output$sometest), max = 1000),
+            #sliderInput("Slider1", "Which values" , min = as.integer(output$sometest), max = 1000),
          ), 
          mainPanel (
             tableOutput("FirstTable"), 
