@@ -26,6 +26,10 @@ flights <- flights %>%
                  names_to = "delay_type", 
                  values_to = "delay_time")
 
+# Order level of factors alphabetically
+levels(flights$origin) <- rev(unique(rev(flights$origin)))
+levels(flights$dest) <- rev(unique(rev(flights$dest)))
+
 ui <- fluidPage(
 
     # Application title
@@ -35,7 +39,7 @@ ui <- fluidPage(
     selectInput("origin", "Origin airport:", choices = levels(flights$origin)),
 
     # select destination airport
-    selectInput("dest", "Destination airport:", choices = levels(flights$dest)),
+    selectInput("dest", "Destination airport:", choices = NULL),
     
     # select date of the flight
     dateRangeInput("date", "Flight date:", 
@@ -51,10 +55,19 @@ ui <- fluidPage(
 
 server <- function(input, output) {
     
+    # reactive expression for filtering based on origin
+    select_origin <- reactive({
+        flights %>% filter(origin == input$origin)
+    })
+    
+    observeEvent(select_origin(), {
+        choices <- levels(droplevels(select_origin()$dest))
+        updateSelectInput(inputId = "dest", choices = choices) 
+    })
+    
     # reactive expression for filtering the data
-    selected <- reactive(flights %>% filter(origin == input$origin,
-                                            dest == input$dest,
-                                            time_hour %within% interval(input$date[1], input$date[2])))
+    selected <- reactive(select_origin() %>% filter(dest == input$dest,
+                                              time_hour %within% interval(input$date[1], input$date[2])))
     
     output$delay_plot <- renderPlot(
         selected() %>% 
