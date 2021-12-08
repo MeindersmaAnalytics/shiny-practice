@@ -78,7 +78,7 @@ server <- function(input, output) {
     select_origin <- reactive({
         flights %>% filter(origin == input$origin) %>% 
             group_by(dest) %>% 
-            filter(n() >= 5)
+            filter(n() >= 50)
     })
     
     # update the destination choices based on the origin choice
