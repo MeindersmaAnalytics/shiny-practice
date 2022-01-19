@@ -114,5 +114,6 @@ server <- function(input, output) {
     )
 }
 # Some Test
-# Run the application 
+# Some Test 2
+# Run the application
 shinyApp(ui = ui, server = server)
