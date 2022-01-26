@@ -61,6 +61,8 @@ ui <- fluidPage(
             # select planes to filter on
             # selectInput("plane", "Plane:", choices = NULL, multiple = TRUE),
             
+            actionButton("calculate_button", "Calculate"),
+            
             width = 3
         ),
         mainPanel(
@@ -87,31 +89,55 @@ server <- function(input, output) {
         updateSelectInput(inputId = "dest", choices = choices) 
     })
     
+    selected_plot <- eventReactive(input$calculate_button , ({
+      # If no selections are made for destination, show this message:
+      validate(need(input$dest, 'Please select at least one destination airport!'))
+      flights %>% filter(delay_type == input$delay_type,
+                         !is.na(delay_type), 
+                         dest %in% input$dest,
+                         time_hour %within% interval(input$date[1], input$date[2])) %>% 
+        ggplot(aes(x = delay_time, group = dest, fill = dest)) +
+        geom_density(adjust=1, alpha=0.2) +
+        ylab("Density") +
+        labs(title = paste0(input$delay_type, " Delay Distribution: Origin to Destination")) +
+        scale_x_continuous(name = "Delay (in minutes)", 
+                           breaks = seq(-60, 120, 30),
+                           limits = c(-60, 120),
+                           labels = seq(-60, 120, 30),
+                           expand = expansion(mult = c(0, 0)))
+    }))
+    
+    
     # reactive expression for filtering based on origin
-    select_delay_type <- reactive({
-        flights %>% filter(delay_type == input$delay_type,
-                           !is.na(delay_type))
-    })
+      output$delay_plot <- renderPlot({
+        selected_plot() 
+      }
+      )
     
-    # reactive expression for filtering the data
-    selected <- reactive(select_delay_type() %>% filter(dest == input$dest,
-                                                        time_hour %within% interval(input$date[1], input$date[2])))
     
-    output$delay_plot <- renderPlot({
-        # If no selections are made for destination, show this message:
-        validate(need(input$dest, 'Please select at least one destination airport!'))
-        selected() %>% 
-            ggplot(aes(x = delay_time, group = dest, fill = dest)) +
-            geom_density(adjust=1, alpha=0.2) +
-            ylab("Density") +
-            labs(title = paste0(input$delay_type, " Delay Distribution: Origin to Destination")) +
-            scale_x_continuous(name = "Delay (in minutes)", 
-                               breaks = seq(-60, 120, 30),
-                               limits = c(-60, 120),
-                               labels = seq(-60, 120, 30),
-                               expand = expansion(mult = c(0, 0)))
-    }
-    )
+    
+  #  selected <- reactive({
+  #      flights %>% filter(delay_type == input$delay_type,
+  #                         !is.na(delay_type), 
+  #                         dest == input$dest,
+  #                         time_hour %within% interval(input$date[1], input$date[2]))
+  #  })
+    
+  #  output$delay_plot <- renderPlot({
+  #      # If no selections are made for destination, show this message:
+  #      validate(need(input$dest, 'Please select at least one destination airport!'))
+  #      selected %>% 
+  #          ggplot(aes(x = delay_time, group = dest, fill = dest)) +
+  #          geom_density(adjust=1, alpha=0.2) +
+  #          ylab("Density") +
+  #          labs(title = paste0(input$delay_type, " Delay Distribution: Origin to Destination")) +
+  #          scale_x_continuous(name = "Delay (in minutes)", 
+  #                             breaks = seq(-60, 120, 30),
+  #                             limits = c(-60, 120),
+  #                             labels = seq(-60, 120, 30),
+  #                             expand = expansion(mult = c(0, 0)))
+  #  }
+  #  )
 }
 
 # Run the application 
