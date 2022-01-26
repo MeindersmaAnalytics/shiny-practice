@@ -1,7 +1,5 @@
 library(shiny)
 library(tidyverse)
-library(ggplot2)
-library(dplyr)
 library(nycflights13)
 
 OriginAirportChoices <- unique(setNames(flights$origin , flights$title))
