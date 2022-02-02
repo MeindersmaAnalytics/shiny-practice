@@ -26,7 +26,10 @@ flights <- flights %>%
                  names_to = "delay_type", 
                  values_to = "delay_time") %>% 
     mutate(delay_type = ifelse(delay_type %in% "dep_delay",
-                               "Departure", "Arrival"))
+                               "Departure", "Arrival"),
+           has_delay_time = !is.na(delay_time)) %>% 
+    left_join(y = weather %>% select(origin, time_hour, humid, temp, wind_speed), 
+              by.x = c('origin', 'time_hour'), by.y = c('origin', 'time_hour'))
 
 # Order level of factors alphabetically
 levels(flights$origin) <- rev(unique(rev(flights$origin)))
@@ -35,41 +38,59 @@ levels(flights$dest) <- rev(unique(rev(flights$dest)))
 ui <- fluidPage(
 
     # Application title
-    titlePanel("New York Flights"),
-    
-    sidebarLayout(
+    titlePanel("Flights Analytics"),
+    tabsetPanel(
+      tabPanel("Delay",
+      sidebarLayout(
+        
         sidebarPanel(
-            # select origin airport
-            selectInput("origin", "Origin airport:", choices = levels(flights$origin)),
-            
-            # select destination airport
-            selectInput("dest", "Destination airport:", choices = NULL, multiple = TRUE),
-            
-            # select delay type: departure or arrival
-            selectInput("delay_type", "Delay type:", choices = c("Departure", "Arrival")),
-            
-            # select date of the flight to filter on
-            dateRangeInput("date", "Flight date:", 
-                           min = min(flights$time_hour), 
-                           max = max(flights$time_hour), 
-                           start = min(flights$time_hour),
-                           end = max(flights$time_hour)),
-            
-            # select carriers to filter on
-            # selectInput("carrier", "Carrier:", choices = NULL, multiple = TRUE),
-            
-            # select planes to filter on
-            # selectInput("plane", "Plane:", choices = NULL, multiple = TRUE),
-            
-            actionButton("calculate_button", "Calculate"),
-            
-            width = 3
+          # select origin airport
+          selectInput("origin", "Origin airport:", choices = levels(flights$origin)),
+          
+          # select destination airport
+          selectInput("dest", "Destination airport:", choices = NULL, multiple = TRUE),
+          
+          # select delay type: departure or arrival
+          selectInput("delay_type", "Delay type:", choices = c("Departure", "Arrival")),
+          
+          # select date of the flight to filter on
+          dateRangeInput("date", "Flight date:", 
+                         min = min(flights$time_hour), 
+                         max = max(flights$time_hour), 
+                         start = min(flights$time_hour),
+                         end = max(flights$time_hour)),
+          
+          # select carriers to filter on
+          # selectInput("carrier", "Carrier:", choices = NULL, multiple = TRUE),
+          
+          # select planes to filter on
+          # selectInput("plane", "Plane:", choices = NULL, multiple = TRUE),
+          
+          actionButton("calculate_button", "Calculate"),
+          
+          width = 3
         ),
         mainPanel(
-            # visualizing departure and arrival delay
-            plotOutput("delay_plot"), 
-            width = 9
+          # visualizing departure and arrival delay
+          plotOutput("delay_plot"), 
+          width = 9
         )
+      )
+      ),
+      tabPanel("Weather",
+               sidebarLayout(
+                 sidebarPanel(
+                   selectInput("origin2", "Origin airport:", choices = levels(flights$origin)),
+                   selectInput("weatherfeature_x", "Weather feature for x-axis:", choices = c("Temperature", "Wind Speed", "Humidity")),
+                   selectInput("weatherfeature_y", "Weather feature for y-axis:", choices = c("Temperature", "Wind Speed", "Humidity")),
+                   actionButton("calculate_button2", "Calculate"),
+                 ),
+                 mainPanel(
+                  plotOutput("scatterplot", brush = "plot_brush"),
+                  tableOutput("selected_points")
+                 )
+               )       
+      )
     )
 )
 
@@ -111,9 +132,34 @@ server <- function(input, output) {
     # reactive expression for filtering based on origin
       output$delay_plot <- renderPlot({
         selected_plot() 
-      }
-     )
+      })
+      
+      weather_filter <- eventReactive(input$calculate_button2 , ({
+        flights %>% filter(origin == input$origin2 , delay_type == 'Departure') %>%
+          sample_n(size = 0.01 * nrow(flights)) 
+      }))
+      
+      xVariable <- reactive({
+        ifelse(input$weatherfeature_x == "Temperature", "temp", 
+               ifelse(input$weatherfeature_x == "Wind Speed", "wind_speed" , "humid"))
+      })
+      
+      yVariable <- reactive({
+        ifelse(input$weatherfeature_y == "Temperature", "temp", 
+               ifelse(input$weatherfeature_y == "Wind Speed", "wind_speed" , "humid"))
+      })
+      
+      output$scatterplot <- renderPlot({
+        weather_filter() %>% 
+        ggplot(aes(x = .data[[xVariable()]], y = .data[[yVariable()]], group = has_delay_time, color = has_delay_time)) +
+          geom_point(size = 0.5) 
+      })
+      
+      output$selected_points <- renderTable({
+        brushedPoints(weather_filter() , xvar = xVariable(), yvar = yVariable() , brush = input$plot_brush)
+      })
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
