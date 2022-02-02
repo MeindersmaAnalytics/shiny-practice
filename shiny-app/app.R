@@ -112,32 +112,7 @@ server <- function(input, output) {
       output$delay_plot <- renderPlot({
         selected_plot() 
       }
-      )
-    
-    
-    
-  #  selected <- reactive({
-  #      flights %>% filter(delay_type == input$delay_type,
-  #                         !is.na(delay_type), 
-  #                         dest == input$dest,
-  #                         time_hour %within% interval(input$date[1], input$date[2]))
-  #  })
-    
-  #  output$delay_plot <- renderPlot({
-  #      # If no selections are made for destination, show this message:
-  #      validate(need(input$dest, 'Please select at least one destination airport!'))
-  #      selected %>% 
-  #          ggplot(aes(x = delay_time, group = dest, fill = dest)) +
-  #          geom_density(adjust=1, alpha=0.2) +
-  #          ylab("Density") +
-  #          labs(title = paste0(input$delay_type, " Delay Distribution: Origin to Destination")) +
-  #          scale_x_continuous(name = "Delay (in minutes)", 
-  #                             breaks = seq(-60, 120, 30),
-  #                             limits = c(-60, 120),
-  #                             labels = seq(-60, 120, 30),
-  #                             expand = expansion(mult = c(0, 0)))
-  #  }
-  #  )
+     )
 }
 
 # Run the application 
