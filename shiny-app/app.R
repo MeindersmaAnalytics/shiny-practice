@@ -30,7 +30,10 @@ ui <- fluidPage(
                            max    = "2013-12-31")
          ), 
          mainPanel (
-            plotOutput("Histogram") 
+            #plotOutput("Histogram"),
+            textOutput("displayText"),
+            textOutput("displayText2"),
+            textOutput("displayText3")
          )
      )
 )
@@ -38,6 +41,26 @@ ui <- fluidPage(
 server <- function(input, output) {
     
     data <- reactive(merge(x = flights, y = planes, by = "tailnum", all.x = TRUE))
+    
+    a <- reactiveVal()
+    c <- reactiveVal()
+    d <- reactiveVal()
+    
+    output$displayText <- renderText({
+      a(20)
+      b <- a()
+      c(100)
+      d(200)
+      paste("Some test message" , b )
+    })
+    
+    output$displayText2 <- renderText({
+      paste("Some test message" , c() )
+    })
+    
+    output$displayText3 <- renderText({
+      paste("Some test message" , d() )
+    })
     
     filteredData <- reactive({
         filter(data(), origin == input$DepartureAirport, 
