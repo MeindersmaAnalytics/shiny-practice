@@ -35,6 +35,9 @@ flights <- flights %>%
 levels(flights$origin) <- rev(unique(rev(flights$origin)))
 levels(flights$dest) <- rev(unique(rev(flights$dest)))
 
+# Choices for x & y variable for weather panel
+optionVector <- list("Temperature", "Wind Speed", "Humidity")
+
 ui <- fluidPage(
 
     # Application title
@@ -81,12 +84,13 @@ ui <- fluidPage(
                sidebarLayout(
                  sidebarPanel(
                    selectInput("origin2", "Origin airport:", choices = levels(flights$origin)),
-                   selectInput("weatherfeature_x", "Weather feature for x-axis:", choices = c("Temperature", "Wind Speed", "Humidity")),
-                   selectInput("weatherfeature_y", "Weather feature for y-axis:", choices = c("Temperature", "Wind Speed", "Humidity")),
+                   selectInput("weatherfeature_x", "Weather feature for x-axis:", choices = optionVector),
+                   selectInput("weatherfeature_y", "Weather feature for y-axis:", choices = NULL),
                    actionButton("calculate_button2", "Calculate"),
                  ),
                  mainPanel(
                   plotOutput("scatterplot", brush = "plot_brush"),
+                  textOutput("someTest"),
                   tableOutput("selected_points")
                  )
                )       
@@ -136,12 +140,26 @@ server <- function(input, output) {
       
       weather_filter <- eventReactive(input$calculate_button2 , ({
         flights %>% filter(origin == input$origin2 , delay_type == 'Departure') %>%
-          sample_n(size = 0.01 * nrow(flights)) 
+          sample_n(size = 0.01 * nrow(flights)) %>% 
+          ggplot(aes(x = .data[[xVariable()]], y = .data[[yVariable()]], group = has_delay_time, color = has_delay_time)) +
+          geom_point(size = 0.5) 
       }))
       
       xVariable <- reactive({
         ifelse(input$weatherfeature_x == "Temperature", "temp", 
                ifelse(input$weatherfeature_x == "Wind Speed", "wind_speed" , "humid"))
+      })
+      
+      output$someTest <- renderPrint(
+        choices <- ifelse(xVariable() %in% "temp" , list("Wind Speed" , "Humidity") , 
+                          ifelse(xVariable() %in% "wind_speed", list("Temperature" , "Humidity") , list("Temperature","Wind Speed")))
+      )
+    
+      observeEvent(xVariable() , {
+        if(xVariable() %in% "temp"){choices <- c("Wind Speed" , "Humidity")}
+        else if (xVariable() %in% "wind_speed") {choices <- c("Temperature" , "Humidity")}
+        else {choices <- c("Temperature","Wind Speed")}
+        updateSelectInput(inputId = "weatherfeature_y", choices = choices)
       })
       
       yVariable <- reactive({
@@ -150,16 +168,29 @@ server <- function(input, output) {
       })
       
       output$scatterplot <- renderPlot({
-        weather_filter() %>% 
-        ggplot(aes(x = .data[[xVariable()]], y = .data[[yVariable()]], group = has_delay_time, color = has_delay_time)) +
-          geom_point(size = 0.5) 
+        weather_filter() 
+      })
+      
+      brushedpoints <- reactive({
+        brushedPoints(flights , xvar = xVariable(), yvar = yVariable() , brush = input$plot_brush)
       })
       
       output$selected_points <- renderTable({
-        brushedPoints(weather_filter() , xvar = xVariable(), yvar = yVariable() , brush = input$plot_brush)
+        req(input$plot_brush)
+        brushedpoints()
       })
 }
 
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+
+
+#Todo:
+#  - Layout style?
+#  - FreezeReactive()
+#- Dynamic/Conditional UI
+#- Nearpoints, double click
+#- Only show table after brushing --> req()/validate()
+#- H13
